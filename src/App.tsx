@@ -295,6 +295,15 @@ export default function App() {
     }
   };
 
+  const handleSaveDeliveryResponse = (orderId: string, deliveryResponse: NonNullable<Order['deliveryResponse']>) => {
+    setOrders((prev) =>
+      prev.map((ord) => (ord.id === orderId ? { ...ord, deliveryResponse } : ord))
+    );
+    if (trackedOrder && trackedOrder.id === orderId) {
+      setTrackedOrder((prev) => (prev ? { ...prev, deliveryResponse } : null));
+    }
+  };
+
   // Reorder items
   const handleReorder = (order: Order) => {
     setCartItems(order.items);
@@ -751,6 +760,7 @@ export default function App() {
         isOpen={isOrderTrackerOpen}
         onClose={() => setIsOrderTrackerOpen(false)}
         onUpdateOrderStatus={handleUpdateOrderStatus}
+        onSaveDeliveryResponse={handleSaveDeliveryResponse}
       />
 
       {/* 6. Past Orders History Modal */}

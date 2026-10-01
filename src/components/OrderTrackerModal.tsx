@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, CheckCircle2, Clock, Phone, MapPin, Receipt, 
-  ChefHat, Bike, Home, ArrowRight, Share2, Copy, AlertCircle
+  ChefHat, Bike, Home, Copy, CircleAlert, Heart, MessageCircle, Send
 } from 'lucide-react';
-import { Order } from '../types';
+import { DeliveryResponse, Order } from '../types';
 import { formatNaira, formatNigerianPhone } from '../utils/formatters';
 
 interface OrderTrackerModalProps {
@@ -11,6 +11,7 @@ interface OrderTrackerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateOrderStatus: (orderId: string, newStatus: Order['orderStatus']) => void;
+  onSaveDeliveryResponse: (orderId: string, response: DeliveryResponse) => void;
 }
 
 export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
@@ -18,9 +19,17 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
   isOpen,
   onClose,
   onUpdateOrderStatus,
+  onSaveDeliveryResponse,
 }) => {
   const [copiedReceipt, setCopiedReceipt] = useState(false);
   const [simulatedCall, setSimulatedCall] = useState(false);
+  const [responseType, setResponseType] = useState<NonNullable<DeliveryResponse['type']> | null>(null);
+  const [responseMessage, setResponseMessage] = useState('');
+
+  useEffect(() => {
+    setResponseType(null);
+    setResponseMessage('');
+  }, [order?.id]);
 
   // Status progression simulation
   useEffect(() => {
@@ -31,6 +40,8 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
         onUpdateOrderStatus(order.id, 'kitchen');
       } else if (order.orderStatus === 'kitchen') {
         onUpdateOrderStatus(order.id, 'dispatched');
+      } else if (order.orderStatus === 'dispatched') {
+        onUpdateOrderStatus(order.id, 'delivered');
       }
     }, 12000);
 
@@ -76,6 +87,19 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
   const handleCallRider = () => {
     setSimulatedCall(true);
     setTimeout(() => setSimulatedCall(false), 3500);
+  };
+
+  const handleConfirmDelivery = () => {
+    onSaveDeliveryResponse(order.id, { confirmedAt: Date.now() });
+  };
+
+  const handleSubmitDeliveryResponse = () => {
+    if (!responseType || !order.deliveryResponse) return;
+    onSaveDeliveryResponse(order.id, {
+      ...order.deliveryResponse,
+      type: responseType,
+      message: responseMessage.trim() || undefined,
+    });
   };
 
   return (
@@ -204,6 +228,96 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
               </div>
             )}
           </div>
+
+          {order.orderStatus === 'delivered' && (
+            <section className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-3" aria-labelledby="delivery-confirmation-title">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 shrink-0 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 id="delivery-confirmation-title" className="text-sm font-black text-stone-900">
+                    {order.deliveryResponse ? 'Delivery received' : 'Did you receive this order?'}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-stone-600">
+                    {order.deliveryResponse
+                      ? 'Your delivery confirmation has been saved.'
+                      : 'Confirm when your meal is safely in your hands.'}
+                  </p>
+                </div>
+                {!order.deliveryResponse && (
+                  <button
+                    onClick={handleConfirmDelivery}
+                    className="shrink-0 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors cursor-pointer"
+                  >
+                    Confirm receipt
+                  </button>
+                )}
+              </div>
+
+              {order.deliveryResponse?.type ? (
+                <div className="rounded-lg border border-emerald-200 bg-white p-3 text-xs">
+                  <p className="font-bold text-stone-800">
+                    {order.deliveryResponse.type === 'gratitude' && 'Thank you for your kind words!'}
+                    {order.deliveryResponse.type === 'feedback' && 'Thanks for your feedback.'}
+                    {order.deliveryResponse.type === 'complaint' && 'Your complaint has been recorded.'}
+                  </p>
+                  {order.deliveryResponse.message && (
+                    <p className="mt-1 text-stone-600">“{order.deliveryResponse.message}”</p>
+                  )}
+                </div>
+              ) : order.deliveryResponse ? (
+                <div className="space-y-3 border-t border-emerald-200 pt-3">
+                  <p className="text-xs font-bold text-stone-800">How was your NaijaBite experience?</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { id: 'feedback', label: 'Feedback', Icon: MessageCircle },
+                      { id: 'gratitude', label: 'Gratitude', Icon: Heart },
+                      { id: 'complaint', label: 'Complaint', Icon: CircleAlert },
+                    ] as const).map(({ id, label, Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        aria-pressed={responseType === id}
+                        onClick={() => setResponseType(id)}
+                        className={`flex min-h-10 items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-xs font-bold transition-colors cursor-pointer ${
+                          responseType === id
+                            ? 'border-emerald-700 bg-emerald-700 text-white'
+                            : 'border-stone-200 bg-white text-stone-700 hover:border-emerald-400'
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {responseType && (
+                    <div className="space-y-2">
+                      <label htmlFor="delivery-response-message" className="sr-only">Add a message (optional)</label>
+                      <textarea
+                        id="delivery-response-message"
+                        value={responseMessage}
+                        onChange={(event) => setResponseMessage(event.target.value)}
+                        maxLength={500}
+                        rows={3}
+                        placeholder={responseType === 'complaint' ? 'Tell us what went wrong (optional)' : 'Add a message (optional)'}
+                        className="w-full resize-y rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs text-stone-800 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          onClick={handleSubmitDeliveryResponse}
+                          className="flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors cursor-pointer"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          Send response
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </section>
+          )}
 
           {/* Dispatch Rider Details (Shown if dispatched or kitchen) */}
           {order.dispatchRider && (
