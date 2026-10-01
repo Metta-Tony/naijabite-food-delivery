@@ -11,6 +11,7 @@ interface OrderTrackerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateOrderStatus: (orderId: string, newStatus: Order['orderStatus']) => void;
+  onConfirmDelivery: (orderId: string) => void;
   onSaveDeliveryResponse: (orderId: string, response: DeliveryResponse) => void;
 }
 
@@ -19,6 +20,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
   isOpen,
   onClose,
   onUpdateOrderStatus,
+  onConfirmDelivery,
   onSaveDeliveryResponse,
 }) => {
   const [copiedReceipt, setCopiedReceipt] = useState(false);
@@ -90,13 +92,12 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
   };
 
   const handleConfirmDelivery = () => {
-    onSaveDeliveryResponse(order.id, { confirmedAt: Date.now() });
+    onConfirmDelivery(order.id);
   };
 
   const handleSubmitDeliveryResponse = () => {
-    if (!responseType || !order.deliveryResponse) return;
+    if (!responseType || !order.deliveryConfirmedAt) return;
     onSaveDeliveryResponse(order.id, {
-      ...order.deliveryResponse,
       type: responseType,
       message: responseMessage.trim() || undefined,
     });
@@ -237,15 +238,15 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 id="delivery-confirmation-title" className="text-sm font-black text-stone-900">
-                    {order.deliveryResponse ? 'Delivery received' : 'Did you receive this order?'}
+                    {order.deliveryConfirmedAt ? 'Delivery confirmed by you' : 'Did you receive this order?'}
                   </h3>
                   <p className="mt-0.5 text-xs text-stone-600">
-                    {order.deliveryResponse
-                      ? 'Your delivery confirmation has been saved.'
+                    {order.deliveryConfirmedAt
+                      ? 'Your confirmation has been saved. Share feedback about your experience.'
                       : 'Confirm when your meal is safely in your hands.'}
                   </p>
                 </div>
-                {!order.deliveryResponse && (
+                {!order.deliveryConfirmedAt && (
                   <button
                     onClick={handleConfirmDelivery}
                     className="shrink-0 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors cursor-pointer"
@@ -266,7 +267,7 @@ export const OrderTrackerModal: React.FC<OrderTrackerModalProps> = ({
                     <p className="mt-1 text-stone-600">“{order.deliveryResponse.message}”</p>
                   )}
                 </div>
-              ) : order.deliveryResponse ? (
+              ) : order.deliveryConfirmedAt ? (
                 <div className="space-y-3 border-t border-emerald-200 pt-3">
                   <p className="text-xs font-bold text-stone-800">How was your NaijaBite experience?</p>
                   <div className="grid grid-cols-3 gap-2">

@@ -304,6 +304,16 @@ export default function App() {
     }
   };
 
+  const handleConfirmDelivery = (orderId: string) => {
+    const deliveryConfirmedAt = Date.now();
+    setOrders((prev) =>
+      prev.map((ord) => (ord.id === orderId ? { ...ord, deliveryConfirmedAt } : ord))
+    );
+    if (trackedOrder?.id === orderId) {
+      setTrackedOrder((prev) => (prev ? { ...prev, deliveryConfirmedAt } : null));
+    }
+  };
+
   // Reorder items
   const handleReorder = (order: Order) => {
     setCartItems(order.items);
@@ -760,6 +770,7 @@ export default function App() {
         isOpen={isOrderTrackerOpen}
         onClose={() => setIsOrderTrackerOpen(false)}
         onUpdateOrderStatus={handleUpdateOrderStatus}
+        onConfirmDelivery={handleConfirmDelivery}
         onSaveDeliveryResponse={handleSaveDeliveryResponse}
       />
 

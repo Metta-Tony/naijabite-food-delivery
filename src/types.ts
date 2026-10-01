@@ -63,8 +63,7 @@ export interface DeliveryZone {
 export type PaymentMethodType = 'transfer' | 'card' | 'ussd' | 'delivery';
 
 export interface DeliveryResponse {
-  confirmedAt: number;
-  type?: 'feedback' | 'gratitude' | 'complaint';
+  type: 'feedback' | 'gratitude' | 'complaint';
   message?: string;
 }
 
@@ -86,6 +85,7 @@ export interface Order {
   paymentMethod: PaymentMethodType;
   paymentStatus: 'pending' | 'paid' | 'pay_on_delivery';
   orderStatus: 'received' | 'kitchen' | 'dispatched' | 'delivered';
+  deliveryConfirmedAt?: number;
   deliveryResponse?: DeliveryResponse;
   dispatchRider?: {
     name: string;
