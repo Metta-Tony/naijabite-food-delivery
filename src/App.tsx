@@ -432,8 +432,12 @@ export default function App() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight font-display text-white leading-tight">
-              Craving Authentic <span className="text-amber-400">Nri Igbo &amp; Eastern Chow</span> Delivered Hot?
+              Design and Implementation of a Mobile App for Food Delivery Service
             </h1>
+
+            <h2 className="text-lg sm:text-xl font-bold text-amber-400">
+              Craving Authentic Nri Igbo
+            </h2>
 
             <p className="text-sm sm:text-base text-stone-300 leading-relaxed max-w-xl">
               Hot Ofe Oha, Ofe Onugbu, Ofe Nsala, royal Ofe Owerri, tender Cow Foot Nkwobi, Isi Ewu, Enugu Abacha na Ugba, Nsukka Okpa di Oku, and sweet tapped Palm Wine (Nkwu Elu) delivered straight to your door.
